@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<!--
+Copyright 2011 Google Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Author: Eric Bidelman (ericbidelman@chromium.org)
+-->
+<html>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<title>Gauntlet</title>
+<link rel="stylesheet" href="cards.css">
+<style>
+html, body {
+  display: -webkit-box;
+  -webkit-box-align: center;
+  -webkit-box-orient: vertical;
+}
+#table {
+  display: -webkit-box;
+  height: 100%;
+}
+ul li > li {
+  float: none !important;
+}
+ul li > li:not(:first-of-type) {
+  position: absolute;
+}
+input[type="number"] {
+  border: none;
+  padding: 5px;
+  font-size: 13pt;
+  box-shadow: 0 1px 4px #999 inset;
+  border-radius: 3px;
+  vertical-align: middle;
+  font-size: inherit;
+  width: 25px;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  display: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+button {
+  display: inline-block;
+  background: -webkit-linear-gradient(#F9F9F9 40%, #E3E3E3 70%);
+  background: -o-linear-gradient(#F9F9F9 40%, #E3E3E3 70%);
+  background: -ms-linear-gradient(#F9F9F9 40%, #E3E3E3 70%);
+  background: -moz-linear-gradient(#F9F9F9 40%, #E3E3E3 70%);
+  background: linear-gradient(#F9F9F9 40%, #E3E3E3 70%);
+  border: 1px solid #999;
+  border-radius: 3px;
+  padding: 5px 8px;
+  outline: none;
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  text-shadow: 1px 1px #fff;
+  font-weight: 700;
+  font-size: 10pt;
+  vertical-align: middle;
+}
+button:hover {
+  border-color: black;
+}
+button:active {
+  background: -webkit-linear-gradient(#E3E3E3 40%, #F9F9F9 70%);
+  background: -o-linear-gradient(#E3E3E3 40%, #F9F9F9 70%);
+  background: -moz-linear-gradient(#E3E3E3 40%, #F9F9F9 70%);
+  background: -ms-linear-gradient(#E3E3E3 40%, #F9F9F9 70%);
+  background: linear-gradient(#E3E3E3 40%, #F9F9F9 70%);
+}
+header {
+  margin: 1em;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <button onclick="game.deal()">DEAL</button> <input type="number" id="remaining" readonly>
+  </nav>
+</header>
+<section>
+  <div id="table" class="playingCards faceImages">
+    <ul class="table"></ul>
+  </div>
+</section>
+<script>
+function Card(rank, suit) {
+  this.suit = suit;
+  this.rank = rank
+}
+
+Card.prototype = {
+  generate: function() {
+    var html = [
+        '<div class="card rank-', this.rank, ' ', this.suit, '">',
+        '<span class="rank">', this.rank.toUpperCase(), '</span>',
+        '<span class="suit">&', this.suit, ';</span>',
+        '</div>'].join('');
+    return html;
+  }
+};
+
+function Gauntlet() {
+  this.cards = [];
+  this.pointer = 0;
+  this.container = document.querySelector('.playingCards .table');
+}
+
+Gauntlet.prototype = {
+  NUM_CARDS_TO_DEAL: 7,
+
+  init: function() {
+    this.makeDeck(1);
+    this.shuffle(1);
+
+    for (var i = 0; i < this.NUM_CARDS_TO_DEAL; ++i) {
+      this.container.appendChild(document.createElement('li'));
+      this.deal();
+    }
+  },
+
+  deal: function() {
+    if (this.cards.length) {
+      var card = this.cards.shift();
+
+      var parent = this.container.children[this.pointer];
+      var li = document.createElement('li');
+      li.innerHTML = card.generate();
+      if (parent.children.length) {
+        li.style.top = ((parent.children.length) * 50) + 'px';
+      }
+      parent.appendChild(li);
+/*for (var i = 0; i < children.length; i++) {
+  
+}*/
+      document.querySelector('#remaining').value = this.cards.length;
+
+      this.pointer = ++this.pointer % this.NUM_CARDS_TO_DEAL;
+    }
+  },
+
+  makeDeck: function(opt_numDecks) {
+    var ranks = ['a', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'j', 'q', 'k'];
+    var suits = ['clubs', 'hearts', 'diams', 'spades'];
+    var numCards = ranks.length * suits.length;
+
+    var numDecks = opt_numDecks || 1;
+
+    // Fill the array with 'numDecks' packs of cards.
+    for (var i = 0; i < numDecks; i++) {
+      for (var j = 0; j < suits.length; j++) {
+        for (var k = 0; k < ranks.length; k++) {
+          this.cards[i * numCards + j * ranks.length + k] = new Card(ranks[k], suits[j]);
+        }
+      }
+    }
+  },
+
+  shuffle: function(opt_numShuffles) {
+    var numShuffles = opt_numShuffles || 1;
+
+    // Shuffle the stack 'n' times.
+    for (var i = 0; i < numShuffles; i++) {
+      for (var j = 0; j < this.cards.length; j++) {
+        var k = Math.floor(Math.random() * this.cards.length);
+        var temp = this.cards[j];
+        this.cards[j] = this.cards[k];
+        this.cards[k] = temp;
+      }
+    }
+  }
+};
+
+var game = new Gauntlet();
+game.init();
+</script>
+<!--[if IE]>
+<script src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js"></script>
+<script>CFInstall.check({mode: 'overlay'});</script>
+<![endif]-->
+</body>
+</html>
