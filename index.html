@@ -21,16 +21,52 @@ Author: Eric Bidelman (ericbidelman@chromium.org)
 <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="chrome=1" />
 <title>Gauntlet</title>
+<link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="cards.css">
 <style>
 html, body {
+  overflow: hidden;
+  height: 100%;
+}
+body {
   display: -webkit-box;
   -webkit-box-align: center;
   -webkit-box-orient: vertical;
+  -webkit-font-smoothing: antialiased;
+  background: -moz-radial-gradient(farthest-side, rgba(0,0,0,0) 90%, rgba(0,0,0,0.2) 150%) #fff;
+  background: -webkit-gradient(radial, center center, 500, center center, 1400, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.6))) #fff;
+}
+h1 {
+  font-family: 'Open Sans', sans-serif;
+  color: #fff;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
+  font-size: 60px;
+  margin: 0;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
 }
 #table {
   display: -webkit-box;
   height: 100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.table > li {
+  opacity: 0.5;
+  -webkit-transition: all 0.2s ease-in-out;
+  -webkit-transition-delay: 0.6s;
+}
+.table > li.next {
+  opacity: 1;
 }
 ul li > li {
   float: none !important;
@@ -41,12 +77,10 @@ ul li > li:not(:first-of-type) {
 input[type="number"] {
   border: none;
   padding: 5px;
-  font-size: 13pt;
-  box-shadow: 0 1px 4px #999 inset;
-  border-radius: 3px;
+  /*box-shadow: 0 1px 4px #999 inset;
+  border-radius: 3px;*/
   vertical-align: middle;
   font-size: inherit;
-  width: 25px;
   text-align: center;
 }
 input[type="number"]::-webkit-outer-spin-button,
@@ -72,7 +106,7 @@ button {
   cursor: pointer;
   text-shadow: 1px 1px #fff;
   font-weight: 700;
-  font-size: 10pt;
+  font-size: 15pt;
   vertical-align: middle;
 }
 button:hover {
@@ -88,14 +122,45 @@ button:active {
 header {
   margin: 1em;
 }
+#reshuffles {
+  box-shadow: none;
+  font-size: 100px;
+  position: absolute;
+  background: none;
+  top: -10px;
+  right: 10px;
+  width: 140px;
+  text-align: right;
+}
+#remaining {
+  position: absolute;
+  right: 30px;
+  top: 100px;
+  border: none;
+  background: none;
+  box-shadow: none;
+  width: 25px;
+}
+aside {
+  opacity: 0.2;
+  -webkit-transition: all 0.2s ease-in-out;
+}
+aside:hover {
+  opacity: 1;
+}
 </style>
 </head>
 <body>
 
+<aside>
+  <input type="number" id="reshuffles" value="0" readonly alt="Reshuffles" title="Reshuffles">
+  <input type="number" id="remaining" readonly alt="Cards remaining" title="Cards remaining">
+</aside>
+
 <header>
-  <nav>
-    <button onclick="game.deal()">DEAL</button> <input type="number" id="remaining" readonly alt="Cards remaining" title="Cards remaining">
-    <input type="number" id="reshuffles" value="0" readonly alt="Reshuffles" title="Reshuffles">
+  <h1>The Gauntlet</h1>
+  <nav><button onclick="debug()" style="position:absolute;left:0">debug</button>
+    <button onclick="game.deal()">DEAL</button>
   </nav>
 </header>
 <section>
@@ -104,6 +169,13 @@ header {
   </div>
 </section>
 <script>
+function debug() {
+  var i = 45;
+  while (i--) {
+    game.deal();
+  }
+}
+
 function Card(rank, suit) {
   this.suit = suit;
   this.rank = rank
@@ -132,7 +204,6 @@ Gauntlet.prototype = {
   NUM_CARDS_TO_DEAL: 7,
 
   init: function() {
-    //this.pointer = 0;
     this.container.innerHTML = '';
 
     this.makeDeck(1);
@@ -153,6 +224,7 @@ Gauntlet.prototype = {
 
     this.cards = this.lastCardInColumn.concat(this.cards);
 
+    // TODO: Figure out better way than 2 of the same loop.
     for (var i = 0; i < this.NUM_CARDS_TO_DEAL; ++i) {
       this.container.appendChild(document.createElement('li'));
     }
@@ -162,6 +234,8 @@ Gauntlet.prototype = {
 
     if (this.lastPointer) {
       this.pointer = this.lastPointer;
+      this.container.children[0].classList.remove('next');
+      this.container.children[this.pointer].classList.add('next');
     }
   },
 
@@ -181,7 +255,11 @@ Gauntlet.prototype = {
 
       document.querySelector('#remaining').value = this.cards.length;
 
+      this.container.children[this.pointer].classList.remove('next');
+
       this.pointer = ++this.pointer % this.NUM_CARDS_TO_DEAL;
+
+      this.container.children[this.pointer].classList.add('next');
     } else {
       this.reset();
     }
@@ -207,7 +285,7 @@ Gauntlet.prototype = {
   shuffle: function(opt_numShuffles) {
     var numShuffles = opt_numShuffles || 1;
 
-    // Shuffle the stack 'n' times.
+    // Shuffle the stack 'numShuffles' times.
     for (var i = 0; i < numShuffles; i++) {
       for (var j = 0; j < this.cards.length; j++) {
         var k = Math.floor(Math.random() * this.cards.length);

@@ -27,9 +27,10 @@
     font-family: Arial, sans-serif;
     position: relative;
     background-color: #fff;
-    -moz-box-shadow: 5px 5px 10px #aaa;
-    -webkit-box-shadow: 5px 5px 10px #aaa;
-    box-shadow: 5px 5px 10px #aaa;
+    -moz-box-shadow: 5px 5px 10px #aaa, 0 1px 20px #aaa;
+    -webkit-box-shadow: 5px 5px 10px #aaa, 0 1px 20px #aaa;
+    box-shadow: 5px 5px 10px #aaa, 0 1px 20px #aaa;
+    cursor: pointer;
 }
 
 .playingCards a.card {
