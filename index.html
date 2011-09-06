@@ -24,8 +24,7 @@ Author: Eric Bidelman (ericbidelman@chromium.org)
 <link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="cards.css">
 <style>
-html, body {
-  overflow: hidden;
+html {
   height: 100%;
 }
 body {
@@ -42,27 +41,18 @@ h1 {
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
   font-size: 60px;
   margin: 0;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -o-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  position: absolute;
+  position: fixed;
   bottom: 15px;
   left: 15px;
+  z-index: -1;
 }
 #table {
   display: -webkit-box;
   height: 100%;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -o-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 .table > li {
   opacity: 0.5;
-  -webkit-transition: all 0.2s ease-in-out;
+  -webkit-transition: all 0.4s ease-in-out;
   -webkit-transition-delay: 0.6s;
 }
 .table > li.next {
@@ -105,6 +95,7 @@ button {
   user-select: none;
   cursor: pointer;
   text-shadow: 1px 1px #fff;
+  font-family: 'Open Sans', sans-serif;
   font-weight: 700;
   font-size: 15pt;
   vertical-align: middle;
@@ -125,49 +116,58 @@ header {
 #reshuffles {
   box-shadow: none;
   font-size: 100px;
-  position: absolute;
   background: none;
-  top: -10px;
-  right: 10px;
   width: 140px;
   text-align: right;
 }
 #remaining {
   position: absolute;
-  right: 30px;
-  top: 100px;
+  right: 21px;
+  top: 110px;
   border: none;
   background: none;
   box-shadow: none;
   width: 25px;
 }
 aside {
+  position: fixed;
+  top: -10px;
+  right: 10px;
   opacity: 0.2;
   -webkit-transition: all 0.2s ease-in-out;
 }
 aside:hover {
   opacity: 1;
 }
+.noselect {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 </style>
 </head>
 <body>
 
-<aside>
+<aside class="noselect">
   <input type="number" id="reshuffles" value="0" readonly alt="Reshuffles" title="Reshuffles">
   <input type="number" id="remaining" readonly alt="Cards remaining" title="Cards remaining">
 </aside>
 
-<header>
-  <h1>The Gauntlet</h1>
-  <nav><button onclick="debug()" style="position:absolute;left:0">debug</button>
-    <button onclick="game.deal()">DEAL</button>
-  </nav>
+<header class="noselect">
+  <button onclick="debug()" style="position:absolute;left:0">debug</button>
+  <button onclick="game.backToStart()" style="position:absolute;left:0;top:80px">start</button>
+  <button onclick="game.deal()">DEAL</button>
 </header>
+
 <section>
   <div id="table" class="playingCards faceImages">
     <ul class="table"></ul>
   </div>
 </section>
+
+<h1 class="noselect">The Gauntlet</h1>
 <script>
 function debug() {
   var i = 45;
@@ -300,6 +300,12 @@ Gauntlet.prototype = {
     var reshuffles = document.querySelector('#reshuffles');
     reshuffles.value = reshuffles.valueAsNumber + 1;
     this.init();
+  },
+
+  backToStart: function() {
+    this.container.children[this.pointer].classList.remove('next');
+    this.pointer = 0;
+    this.container.children[this.pointer].classList.add('next');
   }
 };
 
