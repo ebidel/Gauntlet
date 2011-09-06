@@ -47,6 +47,7 @@ input[type="number"] {
   vertical-align: middle;
   font-size: inherit;
   width: 25px;
+  text-align: center;
 }
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
@@ -93,7 +94,8 @@ header {
 
 <header>
   <nav>
-    <button onclick="game.deal()">DEAL</button> <input type="number" id="remaining" readonly>
+    <button onclick="game.deal()">DEAL</button> <input type="number" id="remaining" readonly alt="Cards remaining" title="Cards remaining">
+    <input type="number" id="reshuffles" value="0" readonly alt="Reshuffles" title="Reshuffles">
   </nav>
 </header>
 <section>
@@ -120,7 +122,9 @@ Card.prototype = {
 
 function Gauntlet() {
   this.cards = [];
+  this.lastCardInColumn = [];
   this.pointer = 0;
+  this.lastPointer = null;
   this.container = document.querySelector('.playingCards .table');
 }
 
@@ -128,18 +132,44 @@ Gauntlet.prototype = {
   NUM_CARDS_TO_DEAL: 7,
 
   init: function() {
+    //this.pointer = 0;
+    this.container.innerHTML = '';
+
     this.makeDeck(1);
     this.shuffle(1);
 
+    if (this.lastCardInColumn.length) {
+      this.lastPointer = this.pointer;
+      this.pointer = 0;
+      for (var i = 0, card; card = this.lastCardInColumn[i]; ++i) {
+        for (var j = 0; j < this.cards.length; ++j) {
+          if (card.rank == this.cards[j].rank && card.suit == this.cards[j].suit) {
+            this.cards.splice(j, 1);
+            break;
+          }
+        }
+      }
+    }
+
+    this.cards = this.lastCardInColumn.concat(this.cards);
+
     for (var i = 0; i < this.NUM_CARDS_TO_DEAL; ++i) {
       this.container.appendChild(document.createElement('li'));
+    }
+    for (var i = 0; i < this.NUM_CARDS_TO_DEAL; ++i) {
       this.deal();
+    }
+
+    if (this.lastPointer) {
+      this.pointer = this.lastPointer;
     }
   },
 
   deal: function() {
     if (this.cards.length) {
       var card = this.cards.shift();
+
+      this.lastCardInColumn[this.pointer] = card;
 
       var parent = this.container.children[this.pointer];
       var li = document.createElement('li');
@@ -148,27 +178,27 @@ Gauntlet.prototype = {
         li.style.top = ((parent.children.length) * 50) + 'px';
       }
       parent.appendChild(li);
-/*for (var i = 0; i < children.length; i++) {
-  
-}*/
+
       document.querySelector('#remaining').value = this.cards.length;
 
       this.pointer = ++this.pointer % this.NUM_CARDS_TO_DEAL;
+    } else {
+      this.reset();
     }
   },
 
   makeDeck: function(opt_numDecks) {
-    var ranks = ['a', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'j', 'q', 'k'];
+    var ranks = [
+        'a', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'j', 'q', 'k'];
     var suits = ['clubs', 'hearts', 'diams', 'spades'];
     var numCards = ranks.length * suits.length;
-
     var numDecks = opt_numDecks || 1;
 
     // Fill the array with 'numDecks' packs of cards.
-    for (var i = 0; i < numDecks; i++) {
-      for (var j = 0; j < suits.length; j++) {
-        for (var k = 0; k < ranks.length; k++) {
-          this.cards[i * numCards + j * ranks.length + k] = new Card(ranks[k], suits[j]);
+    for (var i = 0; i < numDecks; ++i) {
+      for (var j = 0, suit; suit = suits[j]; ++j) {
+        for (var k = 0, rank; rank = ranks[k]; ++k) {
+          this.cards[i * numCards + j * ranks.length + k] = new Card(rank, suit);
         }
       }
     }
@@ -186,6 +216,12 @@ Gauntlet.prototype = {
         this.cards[k] = temp;
       }
     }
+  },
+
+  reset: function() {
+    var reshuffles = document.querySelector('#reshuffles');
+    reshuffles.value = reshuffles.valueAsNumber + 1;
+    this.init();
   }
 };
 
